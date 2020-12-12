@@ -1,6 +1,40 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <stdbool.h>
+#include <string.h>
+
+int calculateDist(int size, int path[size], int matrix[size][size]);
+void swap(int size, int path[size]);
+void AJPseudoEvolutive(int size, int path[size],int matrix[size][size], int iterations);
+void pathPrint(int size, int path[size]);
+void createRandomPath(int size, int path[size]);
+bool checkExistingCity(int size,int path[size], int city);
+int chooseRandomCity(int size);
+void copyArray(int size, int arr1[size], int arr2[size]);
+
+int main(){
+
+    srand(time(NULL));
+    int size = 5;
+
+    int matrix[5][5] = {
+        {0, 23, 10, 4, 1},
+        {23, 0, 9, 5, 4},
+        {10, 9, 0, 8, 2},
+        {4, 5, 8, 0, 11},
+        {1, 4, 2, 11, 0},
+    };
+
+    int path[5];
+    AJPseudoEvolutive(size, path, matrix,100);
+
+    /* int path[5] = {1,2,3,4,5}; */
+
+    
+
+    return EXIT_SUCCESS;
+}
 
 int calculateDist(int size, int path[size], int matrix[size][size]){
     int dist = 0;
@@ -30,26 +64,62 @@ void swap(int size, int path[size]){
     path[b] = aux;
 }
 
-int main(){
+void AJPseudoEvolutive(int size, int path[size],int matrix[size][size], int iterations){
+    createRandomPath(size,path);
+    int dist = calculateDist(size, path, matrix);
+    /* int *pathAux = path; */
+    int pathAux[size];
+    createRandomPath(size,pathAux);
 
-    srand(time(NULL));
-    int size = 5;
-
-    int matrix[5][5] = {
-        {0, 23, 10, 4, 1},
-        {23, 0, 9, 5, 4},
-        {10, 9, 0, 8, 2},
-        {4, 5, 8, 0, 11},
-        {1, 4, 2, 11, 0},
-    };
-
-    int path[5] = {1,2,3,4,5};
-
-    for(int i=0;i<100;i++){
+    for(int i=0;i<iterations;i++){
         swap(size,path);
-        int dist = calculateDist(size, path, matrix);
-        printf("Distance: %d\n", dist);
-    }   
+        int distAux = calculateDist(size, path, matrix);
+        if(distAux<dist){
+            dist = distAux;
+            copyArray(size,pathAux,path);            
+        }        
+    }
+    printf("pathAUX:");
+    pathPrint(size,pathAux);
+    printf("Distance: %d\n", dist);
+    
+}
 
-    return EXIT_SUCCESS;
+void copyArray(int size, int arr1[size], int arr2[size]){
+    for(int i=0;i<size;i++){
+        arr1[i] = arr2[i];
+    }
+}
+
+void pathPrint(int size, int path[size]){
+    printf("Path: {");
+    for(int i=0;i<size;i++){
+        printf("%d ",path[i]);
+    }
+    printf("}\n");
+}
+
+void createRandomPath(int size, int path[size]){
+    for(int i=0;i<size;i++){
+        
+        int city = chooseRandomCity(size);
+        while(checkExistingCity(size,path,city)){
+            city = chooseRandomCity(size);
+        }
+        path[i] = city;
+    }
+}
+
+bool checkExistingCity(int size,int path[size], int city){
+    for(int i=0;i<size;i++){
+        if(path[i] == city){
+            return true;
+        }
+    }
+    return false;
+}
+
+int chooseRandomCity(int size){
+    int city = rand() % size;
+    return city + 1;
 }

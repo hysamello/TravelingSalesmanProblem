@@ -3,6 +3,12 @@
 #include <time.h>
 #include <stdbool.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/mman.h>
+#include <semaphore.h>
+#include <fcntl.h>
+#include <signal.h>
 
 int calculateDist(int size, int path[size], int matrix[size][size]);
 void swap(int size, int path[size]);
@@ -12,6 +18,8 @@ void createRandomPath(int size, int path[size]);
 bool checkExistingCity(int size,int path[size], int city);
 int chooseRandomCity(int size);
 void copyArray(int size, int arr1[size], int arr2[size]);
+
+void AJPseudoEvolutiveBaseVersion(int size, int path[size],int matrix[size][size], int iterations);
 
 int main(){
 
@@ -27,11 +35,11 @@ int main(){
     };
 
     int path[5];
-    AJPseudoEvolutive(size, path, matrix,100);
+    //AJPseudoEvolutive(size, path, matrix,100);
+    AJPseudoEvolutiveBaseVersion(size, path, matrix,100);
 
     /* int path[5] = {1,2,3,4,5}; */
 
-    
 
     return EXIT_SUCCESS;
 }
@@ -79,10 +87,85 @@ void AJPseudoEvolutive(int size, int path[size],int matrix[size][size], int iter
             copyArray(size,pathAux,path);            
         }        
     }
-    printf("pathAUX:");
     pathPrint(size,pathAux);
     printf("Distance: %d\n", dist);
     
+}
+
+void AJPseudoEvolutiveBaseVersion(int size, int path[size],int matrix[size][size], int iterations){
+    // Create shared memory map
+    int memSize = sizeof(int);
+    int pathMemSize = size * sizeof(int);
+    int protection = PROT_READ | PROT_WRITE;
+    int visibility = MAP_ANONYMOUS | MAP_SHARED;
+    int *dist = mmap(NULL, memSize, protection, visibility, 0, 0);
+    int *pathMem = mmap(NULL, pathMemSize, protection, visibility, 0, 0);
+
+    *dist = __INT_MAX__;
+    //*dist = calculateDist(size, path, matrix);
+    printf("%d\n",*dist);
+    
+    // Create semaphores
+    sem_unlink("job_ready");
+    sem_unlink("job_done");
+    sem_t *job_ready = sem_open("job_ready", O_CREAT, 0644, 0);
+    sem_t *job_done = sem_open("job_done", O_CREAT, 0644, 0);
+    
+    // Workers
+    int num_workers = 5;
+    int pids[num_workers];
+
+    createRandomPath(size,path);
+    int pathAux[size];
+    int distAux = 0;
+    
+    // Fork worker processes
+    for (int i=0; i<num_workers; i++) {
+        pids[i] = fork();
+        if (pids[i] == 0) {
+            printf("Worker process #%d!\n", i);
+            while (1) {
+                sem_wait(job_ready);
+                /* printf("Worker #%d: %lu\n", i, strlen(dist)); */
+                swap(size,path);
+                distAux = calculateDist(size, path, matrix);
+                if(distAux<*dist){
+                    *dist = distAux;
+                
+                    copyArray(size,pathMem,path);            
+                } 
+
+                sem_post(job_done);
+            }
+            exit(0);
+        }
+    }
+    
+    // Parent process
+    printf("Parent process!\n");
+
+    
+
+    /* char *msg[3] = {"Hello World", "Hi", "Waterfall"}; */
+    for (int i=0; i<iterations; i++) {
+        /* strcpy(dist, msg[i]); */
+        sem_post(job_ready);
+        sem_wait(job_done);
+    }
+    
+    
+    // Release semaphores
+    sem_close(job_ready);
+    sem_close(job_done);
+    
+    // Kill worker processes
+    for (int i=0; i<num_workers; i++) {
+        printf("Killing %d\n", pids[i]);
+        kill(pids[i], SIGKILL);
+    }    
+
+    pathPrint(size,pathMem);
+    printf("Distance: %d\n", *dist);
 }
 
 void copyArray(int size, int arr1[size], int arr2[size]){

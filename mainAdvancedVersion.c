@@ -12,28 +12,18 @@
 
 int calculateDist(int size, int path[size], int matrix[size][size]);
 void swap(int size, int path[size]);
-void AJPseudoEvolutive(int size, int path[size],int matrix[size][size], int iterations);
+int AJPseudoEvolutive(int size, int matrix[size][size], int num_workers, int pathSolution[size]);
 void pathPrint(int size, int path[size]);
 void createRandomPath(int size, int path[size]);
 bool checkExistingCity(int size,int path[size], int city);
 int chooseRandomCity(int size);
 void copyArray(int size, int arr1[size], int arr2[size]);
-void AJPseudoEvolutiveAdvancedVersion(int size, int path[size],int matrix[size][size], int iterations);
-void signal_handler(int signal);
-
-void AJPseudoEvolutiveBaseVersion(int size, int path[size],int matrix[size][size], int iterations);
-
-
-bool gHasBetterPath =  false;
-int gSignal;
-
-//bool checkedPids[];
 
 int main(){
 
     srand(time(NULL));
-    int size = 5;
 
+    int size = 5;
     int matrix[5][5] = {
         {0, 23, 10, 4, 1},
         {23, 0, 9, 5, 4},
@@ -42,63 +32,20 @@ int main(){
         {1, 4, 2, 11, 0},
     };
 
-    int path[5];
-    //AJPseudoEvolutive(size, path, matrix,100);
-    AJPseudoEvolutiveBaseVersion(size, path, matrix,100);
+    int num_workers = 5;
+    int pathSolution[size];
+    int dist = AJPseudoEvolutive(size, matrix, num_workers, pathSolution);
 
-    /* int path[5] = {1,2,3,4,5}; */
-    //A hysa é incrivel
+    pathPrint(size, pathSolution);
+   
+    printf("Distance: %d\n", dist);
 
     return EXIT_SUCCESS;
 }
 
-int calculateDist(int size, int path[size], int matrix[size][size]){
-    int dist = 0;
 
-    for(int i=0;i<size-1;i++){
-        int current = path[i]-1;
-        int next = path[i+1]-1;
 
-        dist += matrix[current][next];
-    }
 
-    int last = path[size-1]-1;
-    int first = path[0]-1;
-
-    dist += matrix[last][first];
-
-    return dist;
-}
-
-void swap(int size, int path[size]){
-    int a = rand() % size;
-    int b = rand() % size;
-    
-    int aux = path[a];
-
-    path[a] = path[b];
-    path[b] = aux;
-}
-
-void AJPseudoEvolutive(int size, int path[size],int matrix[size][size], int iterations){
-    createRandomPath(size,path);
-    int dist = calculateDist(size, path, matrix);
-    /* int *pathAux = path; */
-    int pathAux[size];
-    createRandomPath(size,pathAux);
-
-    for(int i=0;i<iterations;i++){
-        swap(size,path);
-        int distAux = calculateDist(size, path, matrix);
-        if(distAux<dist){
-            dist = distAux;
-            copyArray(size,pathAux,path);            
-        }        
-    }
-    pathPrint(size,pathAux);
-    printf("Distance: %d\n", dist);
-    
-}
 
 void AJPseudoEvolutiveBaseVersion(int size, int path[size],int matrix[size][size], int iterations){
     // Create shared memory map
@@ -186,7 +133,7 @@ void signal_handler(int signal){
         kill(pidsMem[i], SIGUSR2);
     } */
 
-    gHasBetterPath = true;
+    //gHasBetterPath = true;
     
 }
 
@@ -233,7 +180,7 @@ void AJPseudoEvolutiveAdvancedVersion(int size, int path[size],int matrix[size][
 
     createRandomPath(size,path);
 
-    pathPrint(size, path);
+    
 
     int distAux = 0;
     
@@ -266,7 +213,7 @@ void AJPseudoEvolutiveAdvancedVersion(int size, int path[size],int matrix[size][
                 for (int j = 0; j < num_workers; j++) {
                     
                 }
-                gHasBetterPath = false;
+                //gHasBetterPath = false;
                 
                 
                 
@@ -297,14 +244,14 @@ void AJPseudoEvolutiveAdvancedVersion(int size, int path[size],int matrix[size][
     
     while(1) {
 
-        if (gHasBetterPath)
+       /* if (gHasBetterPath)
         {
 
             for (int i = 0; i < 5; i++)
             {
                 kill(pids[i], SIGUSR2);
             }
-        }
+        }*/
     }
     
     

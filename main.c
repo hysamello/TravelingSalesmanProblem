@@ -26,6 +26,24 @@ void AJPseudoEvolutiveBaseVersion(int size, int path[size],int matrix[size][size
 bool gReceived =  false;
 int gSignal;
 
+void signal_handler(int signal){
+    //printf("Parent: Handling SIGUSR1 in process #%d with PID=%d\n", i, pid);
+
+    for (int i=0; i<pidsMem.length; i++) {
+        printf("Killing %d\n", pidsMem[i]);
+        kill(pidsMem[i], SIGUSR2);
+    } 
+    
+}
+
+void signal_handler_2(int signal){
+    //printf("Child: Handling SIGUSR2 in process #%d with PID=%d\n", i, getpid());
+    
+    gReceived = true;
+
+    //exit(0);
+}
+
 int main(){
 
     srand(time(NULL));
@@ -172,24 +190,6 @@ void AJPseudoEvolutiveBaseVersion(int size, int path[size],int matrix[size][size
     printf("Distance: %d\n", *dist);
 }
 
-void signal_handler(int signal){
-    printf("Parent: Handling SIGUSR1 in process #%d with PID=%d\n", i, pid);
-
-    for (int i=0; i<pidsMem.length; i++) {
-        printf("Killing %d\n", pidsMem[i]);
-        kill(pidsMem[i], SIGUSR2);
-    } 
-    
-}
-
-void signal_handler_2(int signal){
-    printf("Child: Handling SIGUSR2 in process #%d with PID=%d\n", i, getpid());
-    
-    gReceived = true;
-
-    //exit(0);
-}
-
 void AJPseudoEvolutiveAdvancedVersion(int size, int path[size],int matrix[size][size], int iterations){
     // Create shared memory map
     int memSize = sizeof(int);
@@ -226,7 +226,7 @@ void AJPseudoEvolutiveAdvancedVersion(int size, int path[size],int matrix[size][
         pidsMem[i] = fork();
         if (pidsMem[i] == 0) {
             printf("Worker process #%d!\n", i);
-            int internPath = path;
+            int *internPath = path;
             while (1) {
                 sem_wait(job_ready);
                 if(gReceived){

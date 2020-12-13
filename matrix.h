@@ -17,6 +17,7 @@ typedef struct matrix{
     MatrixValue *values;
 }Matrix;
 
+int getSize(char *filename);
 char **split(char *string, int nFields, const char *delim);
 void matrixPrint(Matrix m);
 void loadMatrix(char *filename, Matrix *m);

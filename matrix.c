@@ -104,7 +104,7 @@ void loadMatrix(char *filename, Matrix *m){
         printf("File not found");
     }
 
-    char nextline[512];
+    char nextline[4096];
 
     int countLines = 0;
     bool firstline = true;
@@ -141,6 +141,26 @@ void loadMatrix(char *filename, Matrix *m){
     fclose(f);
 
 } 
+
+int getSize(char *filename){
+    FILE *f = NULL;
+
+    f = fopen(filename,"r");
+
+    if(f==NULL){
+        printf("File not found");
+    }
+
+    char nextline[512];
+
+    int size = 0;
+
+    fgets(nextline,sizeof(nextline),f);
+    char **tokens = split(nextline, nextline[1], " ");
+    size = atoi(tokens[0]);
+
+    return size;
+}
 
 void matrixPrint(Matrix m){
     printf("\n size: %d",m.size);

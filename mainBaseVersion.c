@@ -27,9 +27,10 @@ int main(){
 
     srand(time(NULL));
 
-    int size = 4;
-    Matrix matrix = createMatrix(4);
-    loadMatrix("ex4.txt",&matrix);
+    char* filename = "dantzig42.txt";
+    int size = getSize(filename);
+    Matrix matrix = createMatrix(size);
+    loadMatrix(filename,&matrix);
     matrixPrint(matrix);
 
     int num_workers = 5;
@@ -39,18 +40,7 @@ int main(){
     printf("\n");
     pathPrint(size, pathSolution);
    
-    printf("Distance: %d\n", dist);
-
-    /* Matrix matrix = createMatrix(4);
-
-    loadMatrix("ex4.txt",&matrix);
-
-    int val = get(matrix,3,2);
-    //printf("Valor: %d\n",val);
-
-    matrixPrint(matrix); */
-
-    
+    printf("Distance: %d\n", dist); 
 
     return EXIT_SUCCESS;
 }

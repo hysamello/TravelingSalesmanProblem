@@ -23,6 +23,8 @@ void copyArray(int size, int arr1[size], int arr2[size]);
 
 int main(){
 
+    srand(time(NULL));
+
     int size = 5;
     int matrix[5][5] = {
         {0, 23, 10, 4, 1},
@@ -37,6 +39,7 @@ int main(){
     int dist = AJPseudoEvolutive(size, matrix, num_workers, pathSolution);
 
     pathPrint(size, pathSolution);
+   
     printf("Distance: %d\n", dist);
 
     return EXIT_SUCCESS;
@@ -73,13 +76,13 @@ int AJPseudoEvolutive(int size, int matrix[size][size], int num_workers, int pat
     for (int i=0; i<num_workers; i++) {
         pids[i] = fork();
         if (pids[i] == 0) {
-            printf("Worker process #%d!\n", i);
+            //printf("Worker process #%d!\n", i);
             while (1) {
                 sem_wait(job_ready);
 
-                    printf("Worker #%d:\n", i);
+                    //printf("Worker #%d:\n", i);
 
-                    swap(size, path);
+                    
                     distAux = calculateDist(size, path, matrix);
 
                     if(distAux < *distShmem){
@@ -87,7 +90,7 @@ int AJPseudoEvolutive(int size, int matrix[size][size], int num_workers, int pat
                         copyArray(size, pathShmem, path);            
                     }
             
-                    
+                    swap(size, path);
 
                 sem_post(job_done);
             }
@@ -96,7 +99,7 @@ int AJPseudoEvolutive(int size, int matrix[size][size], int num_workers, int pat
     }
     
     // Parent process
-    printf("Parent process!\n");
+    //printf("Parent process!\n");
     for (int i=0; i<maxInterations; i++) {
         sem_post(job_ready);
         sem_wait(job_done);
@@ -108,13 +111,11 @@ int AJPseudoEvolutive(int size, int matrix[size][size], int num_workers, int pat
     
     // Kill worker processes
     for (int i=0; i<num_workers; i++) {
-        printf("Killing %d\n", pids[i]);
+        //printf("Killing %d\n", pids[i]);
         kill(pids[i], SIGKILL);
     }
 
     copyArray(size, pathSolution, pathShmem);
-
-    pathPrint(size,pathShmem);
 
     return *distShmem;
 }

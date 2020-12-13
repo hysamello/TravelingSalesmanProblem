@@ -173,6 +173,17 @@ void AJPseudoEvolutiveBaseVersion(int size, int path[size],int matrix[size][size
     printf("Distance: %d\n", *dist);
 }
 
+typedef struct child{
+    int id;
+    bool changed;
+}Child;
+
+Child createChild(int id){
+    Child child;
+    child.id = id;
+    child.changed = false;
+}
+
 void signal_handler(int signal){
     //printf("Parent: Handling SIGUSR1 in process #%d with PID=%d\n", i, pid);
 
@@ -202,7 +213,7 @@ void AJPseudoEvolutiveAdvancedVersion(int size, int path[size],int matrix[size][
     int visibility = MAP_ANONYMOUS | MAP_SHARED;
 
     int *dist = mmap(NULL, memSize, protection, visibility, 0, 0);
-    int *pathMem = mmap(NULL, pathMemSize, protection, visibility, 0, 0);
+    int *pathMem = mmap(NULL, pathMemSize, protection, visibility, 0, 0); 
     //int *pidsMem = mmap(NULL, pathMemSize, protection, visibility, 0, 0);
 
     signal(SIGUSR1, signal_handler);
@@ -224,6 +235,8 @@ void AJPseudoEvolutiveAdvancedVersion(int size, int path[size],int matrix[size][
 
     createRandomPath(size,path);
     int distAux = 0;
+
+    bool changed = false;
     
     // Fork worker processes
     for (int i=0; i<num_workers; i++) {
@@ -231,10 +244,15 @@ void AJPseudoEvolutiveAdvancedVersion(int size, int path[size],int matrix[size][
         if (pids[i] == 0) {
             printf("Worker process #%d!\n", i);
             int *internPath = path;
+            bool changed = false;
+
             while (1) {
                 sem_wait(job_ready);
 
+                changed = checkChanged(size,pids);
+                if(!changed && gHasBetterPath){
 
+                }
 
                 for (int j = 0; j < num_workers; j++) {
                     if(gHasBetterPath){
@@ -284,7 +302,9 @@ void AJPseudoEvolutiveAdvancedVersion(int size, int path[size],int matrix[size][
         }
     }
     
-    
+    void checkChanged(int size, int pids[size]){
+        
+    }
     
 
 

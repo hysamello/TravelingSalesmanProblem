@@ -18,6 +18,8 @@ void createRandomPath(int size, int path[size]);
 bool checkExistingCity(int size,int path[size], int city);
 int chooseRandomCity(int size);
 void copyArray(int size, int arr1[size], int arr2[size]);
+void AJPseudoEvolutiveAdvancedVersion(int size, int path[size],int matrix[size][size], int iterations);
+void signal_handler(int signal);
 
 void AJPseudoEvolutiveBaseVersion(int size, int path[size],int matrix[size][size], int iterations);
 
@@ -126,7 +128,6 @@ void AJPseudoEvolutiveBaseVersion(int size, int path[size],int matrix[size][size
             printf("Worker process #%d!\n", i);
             while (1) {
                 sem_wait(job_ready);
-                /* printf("Worker #%d: %lu\n", i, strlen(dist)); */
                 swap(size,path);
                 distAux = calculateDist(size, path, matrix);
                 if(distAux<*dist){
@@ -135,6 +136,105 @@ void AJPseudoEvolutiveBaseVersion(int size, int path[size],int matrix[size][size
                     copyArray(size,pathMem,path);            
                 } 
 
+                sem_post(job_done);
+            }
+            exit(0);
+        }
+    }
+    
+    // Parent process
+    printf("Parent process!\n");
+
+    
+
+    /* char *msg[3] = {"Hello World", "Hi", "Waterfall"}; */
+    for (int i=0; i<iterations; i++) {
+        /* strcpy(dist, msg[i]); */
+        sem_post(job_ready);
+        sem_wait(job_done);
+    }
+    
+    
+    // Release semaphores
+    sem_close(job_ready);
+    sem_close(job_done);
+    
+    // Kill worker processes
+    for (int i=0; i<num_workers; i++) {
+        printf("Killing %d\n", pids[i]);
+        kill(pids[i], SIGKILL);
+    }    
+
+    pathPrint(size,pathMem);
+    printf("Distance: %d\n", *dist);
+}
+
+void signal_handler(int signal){
+    printf("Parent: Handling SIGUSR1 in process #%d with PID=%d\n", i, pid);
+
+    for (int i=0; i<pidsMem.length; i++) {
+        printf("Killing %d\n", pidsMem[i]);
+        kill(pidsMem[i], SIGUSR2);
+    } 
+    
+}
+
+void signal_handler_2(int signal){
+    printf("Child: Handling SIGUSR2 in process #%d with PID=%d\n", i, getpid());
+
+
+    //exit(0);
+}
+
+void AJPseudoEvolutiveAdvancedVersion(int size, int path[size],int matrix[size][size], int iterations){
+    // Create shared memory map
+    int memSize = sizeof(int);
+    int pathMemSize = size * sizeof(int);
+    int protection = PROT_READ | PROT_WRITE;
+    int visibility = MAP_ANONYMOUS | MAP_SHARED;
+    int *dist = mmap(NULL, memSize, protection, visibility, 0, 0);
+    int *pathMem = mmap(NULL, pathMemSize, protection, visibility, 0, 0);
+    int *pidsMem = mmap(NULL, pathMemSize, protection, visibility, 0, 0);
+
+    signal(SIGUSR1, signal_handler);
+    signal(SIGUSR2, signal_handler_2);
+
+    *dist = __INT_MAX__;
+    //*dist = calculateDist(size, path, matrix);
+    printf("%d\n",*dist);
+    
+    // Create semaphores
+    sem_unlink("job_ready");
+    sem_unlink("job_done");
+    sem_t *job_ready = sem_open("job_ready", O_CREAT, 0644, 0);
+    sem_t *job_done = sem_open("job_done", O_CREAT, 0644, 0);
+    
+    // Workers
+    int num_workers = 5;
+    int pids[num_workers];
+
+    createRandomPath(size,path);
+    int distAux = 0;
+    
+    // Fork worker processes
+    for (int i=0; i<num_workers; i++) {
+        /* pids[i] = fork(); */
+        pidsMem[i] = fork();
+        if (pidsMem[i] == 0) {
+            printf("Worker process #%d!\n", i);
+            int internPath = path;
+            while (1) {
+                sem_wait(job_ready);
+                if(0){
+                    internPath = pathMem;
+                }
+                swap(size,internPath);   
+                distAux = calculateDist(size, internPath, matrix);
+                if(distAux<*dist){
+                    *dist = distAux;
+                    kill(getppid(),SIGUSR1);
+                    copyArray(size,pathMem,internPath);
+                } 
                 sem_post(job_done);
             }
             exit(0);

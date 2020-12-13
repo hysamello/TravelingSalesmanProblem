@@ -45,7 +45,7 @@ int main(){
     AJPseudoEvolutiveBaseVersion(size, path, matrix,100);
 
     /* int path[5] = {1,2,3,4,5}; */
-
+    //A hysa é incrivel
 
     return EXIT_SUCCESS;
 }
@@ -176,17 +176,19 @@ void AJPseudoEvolutiveBaseVersion(int size, int path[size],int matrix[size][size
 void signal_handler(int signal){
     //printf("Parent: Handling SIGUSR1 in process #%d with PID=%d\n", i, pid);
 
-    for (int i=0; i<pidsMem.length; i++) {
+    /*for (int i=0; i<pidsMem.length; i++) {
         printf("Killing %d\n", pidsMem[i]);
         kill(pidsMem[i], SIGUSR2);
-    } 
+    } */
+
+    gHasBetterPath = true;
     
 }
 
 void signal_handler_2(int signal){
     //printf("Child: Handling SIGUSR2 in process #%d with PID=%d\n", i, getpid());
     
-    gHasBetterPath = true;
+    
 
     //exit(0);
 }
@@ -231,10 +233,20 @@ void AJPseudoEvolutiveAdvancedVersion(int size, int path[size],int matrix[size][
             int *internPath = path;
             while (1) {
                 sem_wait(job_ready);
-                if(gReceived){
-                    internPath = pathMem;
-                    gReceived = false;
+
+
+
+                for (int j = 0; j < num_workers; j++) {
+                    if(gHasBetterPath){
+                        internPath = pathMem;
+                        chnaged
+                    }
                 }
+                gHasBetterPath = false;
+                
+
+                
+                
                 distAux = calculateDist(size, internPath, matrix);
                 if(distAux<*dist){
                     *dist = distAux;
@@ -260,16 +272,18 @@ void AJPseudoEvolutiveAdvancedVersion(int size, int path[size],int matrix[size][
         sem_wait(job_done);
     }
     
-    
-    if (gHasBetterPath)
-    {
-        for (int i = 0; i < 5; i++)
-        {
-            kill(pids[i], SIGUSR2);
-        }
-        
-    }
+    while(1) {
 
+        if (gHasBetterPath)
+        {
+
+            for (int i = 0; i < 5; i++)
+            {
+                kill(pids[i], SIGUSR2);
+            }
+        }
+    }
+    
     
     
 

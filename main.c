@@ -23,13 +23,18 @@ int main(){
 
     srand(time(NULL));
 
-    char* filename = "dantzig42.txt";
+    char filename[50];
+    int num_workers;
+
+    printf("\nNome do ficheiro: ");
+    scanf("%s", filename);
+
+
     int size = getSize(filename);
     Matrix matrix = createMatrix(size);
     loadMatrix(filename,&matrix);
     matrixPrint(matrix);
 
-    int num_workers = 5;
     int pathSolution[size];
     int dist = AJPseudoEvolutive(size, matrix, pathSolution);
 

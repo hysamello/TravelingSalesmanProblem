@@ -33,30 +33,29 @@ int main(){
 
     srand(time(NULL));
 
-    int size = 4;
-    Matrix matrix = createMatrix(4);
-    loadMatrix("ex4.txt",&matrix);
+    char filename[50];
+    int num_workers;
+
+    printf("\nNome do ficheiro: ");
+    scanf("%s", filename);
+
+    printf("\nNumero de processos: ");
+    scanf("%i", &num_workers);
+
+    //char* filename = "p01.txt";
+    int size = getSize(filename);
+    Matrix matrix = createMatrix(size);
+    loadMatrix(filename,&matrix);
     matrixPrint(matrix);
 
-    int num_workers = 5;
+    //int num_workers = 5;
     int pathSolution[size];
     int dist = AJPseudoEvolutive(size, matrix, num_workers, pathSolution);
 
     printf("\n");
     pathPrint(size, pathSolution);
    
-    printf("Distance: %d\n", dist);
-
-    /* Matrix matrix = createMatrix(4);
-
-    loadMatrix("ex4.txt",&matrix);
-
-    int val = get(matrix,3,2);
-    //printf("Valor: %d\n",val);
-
-    matrixPrint(matrix); */
-
-    
+    printf("Distance: %d\n", dist); 
 
     return EXIT_SUCCESS;
 }

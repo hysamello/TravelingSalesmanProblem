@@ -25,7 +25,7 @@ void copyArray(int size, int arr1[size], int arr2[size]);
 void signal_handler(int signal);
 void signal_handler_2(int signal);
 
-int i, pid;
+int i;
 bool gFoundedBetterPath = false;
 bool *gCheckedPids;
 

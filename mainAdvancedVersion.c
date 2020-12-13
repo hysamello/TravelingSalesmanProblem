@@ -136,7 +136,7 @@ void AJPseudoEvolutiveBaseVersion(int size, int path[size],int matrix[size][size
                 sem_wait(job_ready);
 
                 printf("Worker #%d:\n", i);
-                
+
                 swap(size,path);
                 distAux = calculateDist(size, path, matrix);
                 if(distAux<*dist){
@@ -232,6 +232,9 @@ void AJPseudoEvolutiveAdvancedVersion(int size, int path[size],int matrix[size][
     int pids[num_workers];
 
     createRandomPath(size,path);
+
+    pathPrint(size, path);
+
     int distAux = 0;
     
     // Fork worker processes

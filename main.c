@@ -5,6 +5,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <sys/mman.h>
 #include <semaphore.h>
 #include <fcntl.h>
@@ -20,8 +21,11 @@ int chooseRandomCity(int size);
 void copyArray(int size, int arr1[size], int arr2[size]);
 void AJPseudoEvolutiveAdvancedVersion(int size, int path[size],int matrix[size][size], int iterations);
 void signal_handler(int signal);
-
+void signal_handler_2(int signal);
+void AJPseudoEvolutiveAdvancedVersionTest(int size, int path[size],int matrix[size][size], int iterations);
 void AJPseudoEvolutiveBaseVersion(int size, int path[size],int matrix[size][size], int iterations);
+
+int it, pid;
 
 int main(){
 
@@ -38,7 +42,11 @@ int main(){
 
     int path[5];
     //AJPseudoEvolutive(size, path, matrix,100);
-    AJPseudoEvolutiveBaseVersion(size, path, matrix,100);
+    //AJPseudoEvolutiveBaseVersion(size, path, matrix,100);
+    //AJPseudoEvolutiveAdvancedVersion(size, path, matrix,100);
+    AJPseudoEvolutiveAdvancedVersionTest(size, path, matrix,100);
+
+
 
     /* int path[5] = {1,2,3,4,5}; */
 
@@ -170,31 +178,111 @@ void AJPseudoEvolutiveBaseVersion(int size, int path[size],int matrix[size][size
 }
 
 void signal_handler(int signal){
-    printf("Parent: Handling SIGUSR1 in process #%d with PID=%d\n", i, pid);
-
-    for (int i=0; i<pidsMem.length; i++) {
+    printf("Parent: Handling SIGUSR1 in process #%d with PID=%d\n", it, pid);
+    kill(pid, SIGUSR2);
+    /* for (int it=0; it<5; it++)
+        kill(pids[it], SIGUSR2); */
+    //kill(*pidsMem[i], SIGUSR2);
+    /* for (int i=0; i<pidsMem.length; i++) {
         printf("Killing %d\n", pidsMem[i]);
         kill(pidsMem[i], SIGUSR2);
-    } 
+    } */
     
 }
 
 void signal_handler_2(int signal){
-    printf("Child: Handling SIGUSR2 in process #%d with PID=%d\n", i, getpid());
+    printf("Child: Handling SIGUSR2 in process #%d with PID=%d\n", it, getpid());
+    /* for(int i=0;i<*pidsMem.length;i++){
+        *map[*pidsMem[i]][0] = *map[getpid()][0];
+    } */
 
-
-    //exit(0);
+    exit(0);
 }
 
-void AJPseudoEvolutiveAdvancedVersion(int size, int path[size],int matrix[size][size], int iterations){
+void AJPseudoEvolutiveAdvancedVersionTest(int size, int path[size],int matrix[size][size], int iterations){
+    int mapSize = size * sizeof(int*);
+    int distSize = sizeof(int);
+
+    int protection = PROT_READ | PROT_WRITE;
+    int visibility = MAP_ANONYMOUS | MAP_SHARED;
+
+    int (*map)[5] = (int(*)[5])mmap(NULL, mapSize, protection, visibility, 0, 0);
+    int *dist = mmap(NULL, distSize, protection, visibility, 0, 0);
+
+    sem_unlink("job_ready");
+    sem_unlink("job_done");
+    sem_t *job_ready = sem_open("job_ready", O_CREAT, 0644, 0);
+    sem_t *job_done = sem_open("job_done", O_CREAT, 0644, 0);
+
+    *dist = __INT_MAX__;
+    int distAux = 0;
+    int pathAux[5];
+    createRandomPath(5,path);
+
+    int pids[5];
+
+    signal(SIGUSR1, signal_handler);
+    signal(SIGUSR2, signal_handler_2);
+
+    for (it=0; it<5; it++) {
+        pids[it] = fork();
+        map[it][0] = *path;
+        /* copyArray(5,pathAux,path);
+        map[it][0] = *pathAux; */
+
+        //pathPrint(5,path);
+
+        if (pids[it] == 0) {
+            printf("Child #%d, PID=%d\n", it, getpid());
+            while (1) {
+                //sem_wait(job_ready);
+                swap(size,path);
+                distAux = calculateDist(5,path,matrix);
+                if(distAux<*dist){
+                    map[it][0] = *path;
+                    pathPrint(5,path);
+                    printf("Distance: %d \n",distAux);
+                    kill(getppid(), SIGUSR1);
+                } 
+                //sem_post(job_done);
+            }
+            
+        }
+        sleep(1);
+    }
+
+    sleep(5);
+
+    // Send signal to children
+    /* for (int i=0; i<5; i++) {
+        strcpy(dist, msg[i]);
+        sem_post(job_ready);
+        sem_wait(job_done);
+    } */
+    /* for (int it=0; it<5; it++)
+        kill(pids[it], SIGUSR2); */
+
+    // Wait for children to end
+    for (int it=0; it<5; it++) {
+        int pid = wait(NULL);
+        printf("Parent: child with PID=%d ended\n", pid);
+    }
+}
+
+/* void AJPseudoEvolutiveAdvancedVersion(int size, int path[size],int matrix[size][size], int iterations){
     // Create shared memory map
     int memSize = sizeof(int);
     int pathMemSize = size * sizeof(int);
+    int mapSize = size * sizeof(*int);
+
+
     int protection = PROT_READ | PROT_WRITE;
     int visibility = MAP_ANONYMOUS | MAP_SHARED;
     int *dist = mmap(NULL, memSize, protection, visibility, 0, 0);
     int *pathMem = mmap(NULL, pathMemSize, protection, visibility, 0, 0);
-    int *pidsMem = mmap(NULL, pathMemSize, protection, visibility, 0, 0);
+    //int *pidsMem = mmap(NULL, pathMemSize, protection, visibility, 0, 0);
+
+    int *map[] = mmap(NULL, mapSize, protection, visibility, 0, 0);
 
     signal(SIGUSR1, signal_handler);
     signal(SIGUSR2, signal_handler_2);
@@ -218,37 +306,39 @@ void AJPseudoEvolutiveAdvancedVersion(int size, int path[size],int matrix[size][
     
     // Fork worker processes
     for (int i=0; i<num_workers; i++) {
-        /* pids[i] = fork(); */
+        //pids[i] = fork();
         pidsMem[i] = fork();
-        if (pidsMem[i] == 0) {
+        
+        if (pids[i] == 0) {
             printf("Worker process #%d!\n", i);
             int internPath = path;
             while (1) {
                 sem_wait(job_ready);
-                if(0){
-                    internPath = pathMem;
-                }
-                swap(size,internPath);   
-                distAux = calculateDist(size, internPath, matrix);
+                
+                swap(size,map[i][0]);   
+                distAux = calculateDist(size, map[i][0], matrix);
+                internPath = map[i][0];
                 if(distAux<*dist){
                     *dist = distAux;
                     kill(getppid(),SIGUSR1);
-                    copyArray(size,pathMem,internPath);
+                    copyArray(size,pathMem,path);
                 } 
                 sem_post(job_done);
             }
             exit(0);
         }
     }
+
+    
     
     // Parent process
     printf("Parent process!\n");
 
     
 
-    /* char *msg[3] = {"Hello World", "Hi", "Waterfall"}; */
+    //char *msg[3] = {"Hello World", "Hi", "Waterfall"};
     for (int i=0; i<iterations; i++) {
-        /* strcpy(dist, msg[i]); */
+        //strcpy(dist, msg[i]);
         sem_post(job_ready);
         sem_wait(job_done);
     }
@@ -267,6 +357,8 @@ void AJPseudoEvolutiveAdvancedVersion(int size, int path[size],int matrix[size][
     pathPrint(size,pathMem);
     printf("Distance: %d\n", *dist);
 }
+ */
+
 
 void copyArray(int size, int arr1[size], int arr2[size]){
     for(int i=0;i<size;i++){

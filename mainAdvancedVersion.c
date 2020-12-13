@@ -27,6 +27,8 @@ void AJPseudoEvolutiveBaseVersion(int size, int path[size],int matrix[size][size
 bool gHasBetterPath =  false;
 int gSignal;
 
+//bool checkedPids[];
+
 int main(){
 
     srand(time(NULL));
@@ -132,6 +134,9 @@ void AJPseudoEvolutiveBaseVersion(int size, int path[size],int matrix[size][size
             printf("Worker process #%d!\n", i);
             while (1) {
                 sem_wait(job_ready);
+
+                printf("Worker #%d:\n", i);
+                
                 swap(size,path);
                 distAux = calculateDist(size, path, matrix);
                 if(distAux<*dist){
@@ -187,7 +192,11 @@ void signal_handler(int signal){
 
 void signal_handler_2(int signal){
     //printf("Child: Handling SIGUSR2 in process #%d with PID=%d\n", i, getpid());
-    
+    /*
+    for (size_t i = 0; i < count; i++)
+    {
+        
+    }*/
     
 
     //exit(0);
@@ -231,20 +240,31 @@ void AJPseudoEvolutiveAdvancedVersion(int size, int path[size],int matrix[size][
         if (pids[i] == 0) {
             printf("Worker process #%d!\n", i);
             int *internPath = path;
+            bool checked = false;
             while (1) {
                 sem_wait(job_ready);
 
 
+/*
+
+                if(!checkedPids[i]){
+                    internPath = pathMem;
+                    checkedPids[i] = true;
+                }
+
+                gHasBetetrPath = chec()
+                
+                
+                if(gHasBetterPath && !changed){
+                        internPath = pathMem;
+                        changed = true;
+                }*/
 
                 for (int j = 0; j < num_workers; j++) {
-                    if(gHasBetterPath){
-                        internPath = pathMem;
-                        chnaged
-                    }
+                    
                 }
                 gHasBetterPath = false;
                 
-
                 
                 
                 distAux = calculateDist(size, internPath, matrix);

@@ -4,10 +4,13 @@
 #include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
+#include <time.h>
+#include <sys/time.h>
+
 
 int calculateDist(int size, int path[size], int matrix[size][size]);
 void swap(int size, int path[size]);
-int AJPseudoEvolutive(int size, int matrix[size][size], int iterations, int pathSolution[size]);
+int AJPseudoEvolutive(int size, int matrix[size][size], int pathSolution[size]);
 void pathPrint(int size, int path[size]);
 void createRandomPath(int size, int path[size]);
 bool checkExistingCity(int size,int path[size], int city);
@@ -19,7 +22,8 @@ int main(){
 
     srand(time(NULL));
 
-    int size = 5;
+    const int size = 5;
+
     int matrix[5][5] = {
         {0, 23, 10, 4, 1},
         {23, 0, 9, 5, 4},
@@ -29,7 +33,7 @@ int main(){
     };
 
     int pathSolution[size];
-    int dist = AJPseudoEvolutive(size, matrix, 100, pathSolution);
+    int dist = AJPseudoEvolutive(size, matrix, pathSolution);
 
     pathPrint(size, pathSolution);
     printf("Distance: %d\n", dist);
@@ -37,23 +41,36 @@ int main(){
     return EXIT_SUCCESS;
 }
 
-int AJPseudoEvolutive(int size, int matrix[size][size], int iterations, int pathSolution[size]){
+int AJPseudoEvolutive(int size, int matrix[size][size], int pathSolution[size]){
+
+    const int maxInterations = 1000;
+    const long maxTime = 100;
+
+    struct timeval startTime;
+    struct timeval elapsedTime;
 
     int path[size];
     createRandomPath(size,path);
 
     int distSolution = __INT_MAX__;
-    int distAux = calculateDist(size, path, matrix);
-    
-    for(int i=0; i<iterations; i++){
+    int distAux = 0;  
+
+    gettimeofday(&startTime, NULL);
+
+    int i = 0;
+    while (((elapsedTime.tv_sec - startTime.tv_sec) * 1000000 + (elapsedTime.tv_usec - startTime.tv_usec) < maxTime) && (i < maxInterations)) {
         
+        distAux = calculateDist(size, path, matrix);
+
         if(distAux<distSolution){
             distSolution = distAux;
             copyArray(size, pathSolution, path);            
         }
+ 
+        swap(size, path);
 
-        swap(size,path);   
-        distAux = calculateDist(size, path, matrix);
+        gettimeofday(&elapsedTime, NULL);
+        i++;
     }
 
     return distSolution;

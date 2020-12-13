@@ -31,7 +31,7 @@ runDebugBaseVersion:
 
 
 buildAdvancedVersion:
-	gcc -o mainAdvancedVersion mainAdvancedVersion.c -pthread
+	gcc -o mainAdvancedVersion mainAdvancedVersion.c  matrix.c -pthread
 
 debugAdvancedVersion:
 	gcc -g -o mainAdvancedVersion mainAdvancedVersion.c

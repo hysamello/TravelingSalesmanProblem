@@ -22,6 +22,12 @@ void createRandomPath(int size, int path[size]);
 bool checkExistingCity(int size,int path[size], int city);
 int chooseRandomCity(int size);
 void copyArray(int size, int arr1[size], int arr2[size]);
+void signal_handler(int signal);
+void signal_handler_2(int signal);
+
+int i, pid;
+bool gFoundedBetterPath = false;
+bool *gCheckedPids;
 
 int main(){
 
@@ -55,9 +61,40 @@ int main(){
     return EXIT_SUCCESS;
 }
 
+
+
+void signal_handler(int signal)
+{
+    //printf("Parent: Handling SIGUSR1 in process #%d with PID=%d\n", i, pid);
+
+    gFoundedBetterPath = true;
+}
+
+void signal_handler_2(int signal)
+{
+    //printf("Child: Handling SIGUSR2 in process #%d with PID=%d\n", i, getpid());
+
+    gCheckedPids[i] = true;
+
+
+    //exit(0);
+}
+
 int AJPseudoEvolutive(int size, Matrix matrix, int num_workers, int pathSolution[size]){
 
     const int maxInterations = 100;
+
+    gCheckedPids = (bool*)malloc(num_workers * sizeof(bool));
+
+    for (int i = 0; i < num_workers; i++)
+    {
+        gCheckedPids[i] = false;
+    }
+
+
+    // Signals
+    signal(SIGUSR1, signal_handler);
+    signal(SIGUSR2, signal_handler_2);
 
     // Create shared memory map
     int protection = PROT_READ | PROT_WRITE;
@@ -83,7 +120,7 @@ int AJPseudoEvolutive(int size, Matrix matrix, int num_workers, int pathSolution
     int pids[num_workers];
     
     // Fork worker processes
-    for (int i=0; i<num_workers; i++) {
+    for (i=0; i<num_workers; i++) {
         pids[i] = fork();
         if (pids[i] == 0) {
             //printf("Worker process #%d!\n", i);
@@ -92,12 +129,20 @@ int AJPseudoEvolutive(int size, Matrix matrix, int num_workers, int pathSolution
 
                     //printf("Worker #%d:\n", i);
 
+                    if (gCheckedPids[i])    
+                    {
+                        copyArray(size, path, pathShmem);
+                        gCheckedPids[i] =  false;
+                    }
                     
+
                     distAux = calculateDist(size, path, matrix);
 
                     if(distAux < *distShmem){
+
                         *distShmem = distAux;
-                        copyArray(size, pathShmem, path);            
+                        copyArray(size, pathShmem, path);
+                        kill(getppid(), SIGUSR1);          
                     }
             
                     swap(size, path);
@@ -112,6 +157,14 @@ int AJPseudoEvolutive(int size, Matrix matrix, int num_workers, int pathSolution
     //printf("Parent process!\n");
     for (int i=0; i<maxInterations; i++) {
         sem_post(job_ready);
+
+            if (gFoundedBetterPath){
+
+                for (int i = 0; i < num_workers; i++){
+                    kill(pids[i], SIGUSR2);
+                }
+            }
+
         sem_wait(job_done);
     }
 

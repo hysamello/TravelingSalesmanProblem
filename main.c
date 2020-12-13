@@ -23,6 +23,9 @@ void signal_handler(int signal);
 
 void AJPseudoEvolutiveBaseVersion(int size, int path[size],int matrix[size][size], int iterations);
 
+bool gReceived =  false;
+int gSignal;
+
 int main(){
 
     srand(time(NULL));
@@ -181,7 +184,8 @@ void signal_handler(int signal){
 
 void signal_handler_2(int signal){
     printf("Child: Handling SIGUSR2 in process #%d with PID=%d\n", i, getpid());
-
+    
+    gReceived = true;
 
     //exit(0);
 }
@@ -225,8 +229,9 @@ void AJPseudoEvolutiveAdvancedVersion(int size, int path[size],int matrix[size][
             int internPath = path;
             while (1) {
                 sem_wait(job_ready);
-                if(0){
+                if(gReceived){
                     internPath = pathMem;
+                    gReceived = false;
                 }
                 swap(size,internPath);   
                 distAux = calculateDist(size, internPath, matrix);

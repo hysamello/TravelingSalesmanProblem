@@ -11,10 +11,12 @@
 #include <signal.h>
 #include <sys/time.h>
 #include <time.h>
+#include "matrix.h"
 
-int calculateDist(int size, int path[size], int matrix[size][size]);
+
+int calculateDist(int size, int path[size], Matrix matrix);
 void swap(int size, int path[size]);
-int AJPseudoEvolutive(int size, int matrix[size][size], int num_workers, int pathSolution[size]);
+int AJPseudoEvolutive(int size, Matrix matrix, int num_workers, int pathSolution[size]);
 void pathPrint(int size, int path[size]);
 void createRandomPath(int size, int path[size]);
 bool checkExistingCity(int size,int path[size], int city);
@@ -25,27 +27,35 @@ int main(){
 
     srand(time(NULL));
 
-    int size = 5;
-    int matrix[5][5] = {
-        {0, 23, 10, 4, 1},
-        {23, 0, 9, 5, 4},
-        {10, 9, 0, 8, 2},
-        {4, 5, 8, 0, 11},
-        {1, 4, 2, 11, 0},
-    };
+    int size = 4;
+    Matrix matrix = createMatrix(4);
+    loadMatrix("ex4.txt",&matrix);
+    matrixPrint(matrix);
 
     int num_workers = 5;
     int pathSolution[size];
     int dist = AJPseudoEvolutive(size, matrix, num_workers, pathSolution);
 
+    printf("\n");
     pathPrint(size, pathSolution);
    
     printf("Distance: %d\n", dist);
 
+    /* Matrix matrix = createMatrix(4);
+
+    loadMatrix("ex4.txt",&matrix);
+
+    int val = get(matrix,3,2);
+    //printf("Valor: %d\n",val);
+
+    matrixPrint(matrix); */
+
+    
+
     return EXIT_SUCCESS;
 }
 
-int AJPseudoEvolutive(int size, int matrix[size][size], int num_workers, int pathSolution[size]){
+int AJPseudoEvolutive(int size, Matrix matrix, int num_workers, int pathSolution[size]){
 
     const int maxInterations = 100;
 
@@ -121,7 +131,7 @@ int AJPseudoEvolutive(int size, int matrix[size][size], int num_workers, int pat
 }
 
 
-int calculateDist(int size, int path[size], int matrix[size][size]){
+int calculateDist(int size, int path[size], Matrix matrix){
 
     int dist = 0;
 
@@ -129,13 +139,16 @@ int calculateDist(int size, int path[size], int matrix[size][size]){
         int current = path[i]-1;
         int next = path[i+1]-1;
 
-        dist += matrix[current][next];
+        //dist += matrix[current][next];
+        dist += get(matrix,current,next);
+
     }
 
     int last = path[size-1]-1;
     int first = path[0]-1;
 
-    dist += matrix[last][first];
+    //dist += matrix[last][first];
+    dist += get(matrix,last,first);
 
     return dist;
 }

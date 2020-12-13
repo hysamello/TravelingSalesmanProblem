@@ -15,7 +15,7 @@ runDebug:
 
 
 buildBaseVersion:
-	gcc -o mainBaseVersion mainBaseVersion.c -pthread
+	gcc -o mainBaseVersion mainBaseVersion.c matrix.c -pthread
 
 debugBaseVersion:
 	gcc -g -o mainBaseVersion mainBaseVersion.c

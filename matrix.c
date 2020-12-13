@@ -2,8 +2,9 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include "matrix.h"
 
-#define M 4
+/* #define M 4
 
 typedef struct matrixValue{
     int line;
@@ -24,12 +25,12 @@ typedef struct matrix{
 char **split(char *string, int nFields, const char *delim);
 void matrixPrint(Matrix m);
 void loadMatrix(char *filename, Matrix *m);
-/* MatrixValue createValue(int line,int column,int value); */
+MatrixValue createValue(int line,int column,int value);
 Matrix createMatrix(unsigned maxLines);
 int get(Matrix m, int linha, int coluna);
-//void loadMatrix2d(char *filename,int size, int matrix[size][size]);
+//void loadMatrix2d(char *filename,int size, int matrix[size][size]); */
 
-int main(){
+/* int main(){
     Matrix matrix = createMatrix(4);
 
     loadMatrix("ex4.txt",&matrix);
@@ -39,7 +40,7 @@ int main(){
 
     matrixPrint(matrix);
 
-}
+} */
 
 Matrix createMatrix(unsigned maxLines){
     Matrix matrix;
@@ -126,11 +127,11 @@ void loadMatrix(char *filename, Matrix *m){
         }
         
         char **tokens = split(nextline, lines, " ");
-        printf("\nLine:%d\n",countLines);
+        //printf("\nLine:%d\n",countLines);
         for(int i=0;i<lines;i++){
             val = atoi(tokens[i]);
             insertValue(m,countLines,i,val);
-            printf(" %d ",val); 
+            //printf(" %d ",val); 
         }
         countLines++;
 
@@ -147,7 +148,6 @@ void matrixPrint(Matrix m){
     int v = 0;
 
     for(int i=0;i<m.maxLines;i++){
-        //printf("\nOI");
 
         printf("\n{");
         for(int j=0;j<m.maxLines;j++){
@@ -156,7 +156,6 @@ void matrixPrint(Matrix m){
         }
         printf("}\n");
     }
-    printf("vals: %d\n",m.values->val);
 }
 
 int get(Matrix m, int linha, int coluna) {

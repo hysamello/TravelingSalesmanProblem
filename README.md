@@ -10,9 +10,9 @@ Given a list of cities and the distances between them, the Traveling Salesman Pr
 - C
 - Linux
 - Competitive programing
-  - *Fork
-  - *Shared memory
-  - *Semaphores
+  - Fork
+  - Shared memory
+  - Semaphores
 
 ## Entries
 
